@@ -22,6 +22,7 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: '2181'
       ZOOKEEPER_ADMIN_ENABLE_SERVER: 'false'
+      HOST_HOSTNAME: dockerhost
     ports:
       - 2181:2181
 
@@ -32,7 +33,7 @@ services:
     environment:
       KAFKA_BROKER_ID: '0'
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_NUM_PARTITIONS: '12'
+      KAFKA_NUM_PkARTITIONS: '12'
       KAFKA_COMPRESSION_TYPE: 'gzip'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
@@ -43,6 +44,7 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_AUTHORIZER_CLASS_NAME: 'kafka.security.auth.SimpleAclAuthorizer'
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: 'true'
+      HOST_HOSTNAME: dockerhost
     links:
       - zookeeper
     ports:

@@ -1,10 +1,14 @@
 import React from 'react';
 import Header from '../../Header';
+import {Link} from 'react-router-dom';
 import Table from '../../../components/Table';
 import * as constants from '../../../utils/constants';
-import { uriAclsList } from '../../../utils/endpoints';
+import { uriAclsDelete, uriAclsList } from '../../../utils/endpoints';
 import SearchBar from '../../../components/SearchBar';
 import Root from "../../../components/Root";
+import {toast} from 'react-toastify';
+import ConfirmModal from '../../../components/Modal/ConfirmModal';
+import AclDeleteModal from './AclDeleteModal';
 
 class Acls extends Root {
   state = {
@@ -13,7 +17,12 @@ class Acls extends Root {
     searchData: {
       search: ''
     },
-    loading: true
+    loading: true,
+
+    // deletion
+    principalToDeleteAclFor: undefined,
+    aclsToDelete: undefined,
+    showDeleteModal: false,
   };
 
   componentDidMount() {
@@ -60,6 +69,12 @@ class Acls extends Root {
   render() {
     const { data, searchData, loading } = this.state;
     const { clusterId } = this.props.match.params;
+    const roles = this.state.roles || {};
+
+    const actions = [constants.TABLE_DETAILS];
+    //if(roles.acls && roles.acls['acls/delete']) {
+      actions.push(constants.TABLE_DELETE);
+    //}
 
     return (
       <div>
@@ -90,11 +105,12 @@ class Acls extends Root {
               sortable: true
             }
           ]}
-          actions={[constants.TABLE_DETAILS]}
+          actions={actions}
           data={data}
           updateData={data => {
             this.setState({ data });
           }}
+          onDelete={acl => this.setState({showDeleteModal: true, principalToDeleteAclFor: acl.id.principal, aclsToDelete: acl.id.acls })}
           noContent={
             <tr>
               <td colSpan={3}>
@@ -106,6 +122,26 @@ class Acls extends Root {
             </tr>
           }
           onDetails={acl => `/ui/${clusterId}/acls/${acl.principalEncoded}`}
+        />
+        {/*roles.acls && roles.acls['acls/insert'] && */(
+          <aside>
+            <Link
+              to={{
+                pathname: `/ui/${clusterId}/acls/create`,
+                state: { formData: this.state.createAclFormData }
+              }}
+              className="btn btn-primary"
+            >
+              Create ACL
+            </Link>
+          </aside>
+        )}
+        <AclDeleteModal
+          cluster={this.state.selectedCluster}
+          principal={this.state.principalToDeleteAclFor}
+          acls={this.state.aclsToDelete}
+          isShown={this.state.showDeleteModal}
+          closeModal={() => this.setState({showDeleteModal: false}, () => this.getAcls())}
         />
       </div>
     );

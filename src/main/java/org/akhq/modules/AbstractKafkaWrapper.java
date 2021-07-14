@@ -1,14 +1,34 @@
 package org.akhq.modules;
 
 
+import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.ImmutableMap;
+import org.akhq.models.AccessControl;
 import org.akhq.models.Partition;
 import org.akhq.utils.Logger;
-import org.apache.kafka.clients.admin.*;
+import org.apache.kafka.clients.admin.Config;
+import org.apache.kafka.clients.admin.ConsumerGroupDescription;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.DescribeClusterResult;
+import org.apache.kafka.clients.admin.ListTopicsOptions;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.acl.AccessControlEntry;
+import org.apache.kafka.common.acl.AccessControlEntryFilter;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
@@ -17,13 +37,12 @@ import org.apache.kafka.common.errors.ClusterAuthorizationException;
 import org.apache.kafka.common.errors.SecurityDisabledException;
 import org.apache.kafka.common.errors.TopicAuthorizationException;
 import org.apache.kafka.common.requests.DescribeLogDirsResponse;
+import org.apache.kafka.common.resource.ResourcePattern;
+import org.apache.kafka.common.resource.ResourcePatternFilter;
 
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-import javax.inject.Inject;
-
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 
 abstract public class AbstractKafkaWrapper {
     @Inject
@@ -36,8 +55,8 @@ abstract public class AbstractKafkaWrapper {
             DescribeClusterResult cluster = kafkaModule.getAdminClient(clusterId).describeCluster();
 
             Logger.call(cluster.clusterId(), "Get cluster");
-            Logger.call(cluster.nodes() , "Get nodes");
-            Logger.call(cluster.controller() , "Get contoller");
+            Logger.call(cluster.nodes(), "Get nodes");
+            Logger.call(cluster.controller(), "Get contoller");
 
             return cluster;
         }
@@ -61,7 +80,8 @@ abstract public class AbstractKafkaWrapper {
 
     private final Map<String, Map<String, TopicDescription>> describeTopics = new HashMap<>();
 
-    public Map<String, TopicDescription> describeTopics(String clusterId, List<String> topics) throws ExecutionException {
+    public Map<String, TopicDescription> describeTopics(String clusterId,
+                                                        List<String> topics) throws ExecutionException {
         describeTopics.computeIfAbsent(clusterId, s -> new HashMap<>());
 
         List<String> list = new ArrayList<>(topics);
@@ -87,11 +107,12 @@ abstract public class AbstractKafkaWrapper {
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    public void createTopics(String clusterId, String name, int partitions, short replicationFactor) throws ExecutionException {
+    public void createTopics(String clusterId, String name, int partitions,
+                             short replicationFactor) throws ExecutionException {
         Logger.call(kafkaModule
-            .getAdminClient(clusterId)
-            .createTopics(Collections.singleton(new NewTopic(name, partitions, replicationFactor)))
-            .all(),
+                .getAdminClient(clusterId)
+                .createTopics(Collections.singleton(new NewTopic(name, partitions, replicationFactor)))
+                .all(),
             "Create Topics",
             Collections.singletonList(name)
         );
@@ -101,8 +122,8 @@ abstract public class AbstractKafkaWrapper {
 
     public void deleteTopics(String clusterId, String name) throws ExecutionException {
         Logger.call(kafkaModule.getAdminClient(clusterId)
-            .deleteTopics(Collections.singleton(name))
-            .all(),
+                .deleteTopics(Collections.singleton(name))
+                .all(),
             "Delete Topic",
             Collections.singletonList(name)
         );
@@ -112,7 +133,8 @@ abstract public class AbstractKafkaWrapper {
 
     private final Map<String, Map<String, List<Partition.Offsets>>> describeTopicsOffsets = new HashMap<>();
 
-    public Map<String, List<Partition.Offsets>> describeTopicsOffsets(String clusterId, List<String> topics) throws ExecutionException, InterruptedException {
+    public Map<String, List<Partition.Offsets>> describeTopicsOffsets(String clusterId,
+                                                                      List<String> topics) throws ExecutionException, InterruptedException {
         describeTopicsOffsets.computeIfAbsent(clusterId, s -> new HashMap<>());
 
         List<String> list = new ArrayList<>(topics);
@@ -178,7 +200,8 @@ abstract public class AbstractKafkaWrapper {
 
     private Map<String, Map<String, ConsumerGroupDescription>> describeConsumerGroups = new HashMap<>();
 
-    public Map<String, ConsumerGroupDescription> describeConsumerGroups(String clusterId, List<String> groups) throws ExecutionException {
+    public Map<String, ConsumerGroupDescription> describeConsumerGroups(String clusterId,
+                                                                        List<String> groups) throws ExecutionException {
         describeConsumerGroups.computeIfAbsent(clusterId, s -> new HashMap<>());
 
         List<String> list = new ArrayList<>(groups);
@@ -206,9 +229,9 @@ abstract public class AbstractKafkaWrapper {
 
     public void deleteConsumerGroups(String clusterId, String name) throws ApiException, ExecutionException {
         Logger.call(kafkaModule
-            .getAdminClient(clusterId)
-            .deleteConsumerGroups(Collections.singleton(name))
-            .all(),
+                .getAdminClient(clusterId)
+                .deleteConsumerGroups(Collections.singleton(name))
+                .all(),
             "deleteConsumerGroups",
             Collections.singletonList(name)
         );
@@ -219,7 +242,8 @@ abstract public class AbstractKafkaWrapper {
 
     private Map<String, Map<String, Map<TopicPartition, OffsetAndMetadata>>> consumerGroupOffset = new HashMap<>();
 
-    public Map<TopicPartition, OffsetAndMetadata> consumerGroupsOffsets(String clusterId, String groupId) throws ExecutionException {
+    public Map<TopicPartition, OffsetAndMetadata> consumerGroupsOffsets(String clusterId,
+                                                                        String groupId) throws ExecutionException {
         consumerGroupOffset.computeIfAbsent(clusterId, s -> new HashMap<>());
 
         if (!this.consumerGroupOffset.get(clusterId).containsKey(groupId)) {
@@ -241,7 +265,8 @@ abstract public class AbstractKafkaWrapper {
 
     private final Map<String, Map<Integer, Map<String, DescribeLogDirsResponse.LogDirInfo>>> logDirs = new HashMap<>();
 
-    public Map<Integer, Map<String, DescribeLogDirsResponse.LogDirInfo>> describeLogDir(String clusterId) throws ExecutionException, InterruptedException {
+    public Map<Integer, Map<String, DescribeLogDirsResponse.LogDirInfo>> describeLogDir(
+        String clusterId) throws ExecutionException, InterruptedException {
         if (!this.logDirs.containsKey(clusterId)) {
             this.logDirs.put(clusterId, Logger.call(
                 () -> {
@@ -276,7 +301,8 @@ abstract public class AbstractKafkaWrapper {
 
     private Map<String, Map<ConfigResource, Config>> describeConfigs = new HashMap<>();
 
-    public Map<ConfigResource, Config> describeConfigs(String clusterId, ConfigResource.Type type, List<String> names) throws ExecutionException, InterruptedException {
+    public Map<ConfigResource, Config> describeConfigs(String clusterId, ConfigResource.Type type,
+                                                       List<String> names) throws ExecutionException, InterruptedException {
         describeConfigs.computeIfAbsent(clusterId, s -> new HashMap<>());
 
         List<String> list = new ArrayList<>(names);
@@ -326,20 +352,21 @@ abstract public class AbstractKafkaWrapper {
     }
 
     public void alterConfigs(String clusterId, Map<ConfigResource, Config> configs) throws ExecutionException {
-         Logger.call(
-             kafkaModule.getAdminClient(clusterId)
-            .alterConfigs(configs)
-            .all(),
-             "Alter cofigs",
-             Collections.singletonList(clusterId)
-         );
+        Logger.call(
+            kafkaModule.getAdminClient(clusterId)
+                .alterConfigs(configs)
+                .all(),
+            "Alter cofigs",
+            Collections.singletonList(clusterId)
+        );
 
         this.describeConfigs = new HashMap<>();
     }
 
     private final Map<String, Map<AclBindingFilter, Collection<AclBinding>>> describeAcls = new HashMap<>();
 
-    public Collection<AclBinding> describeAcls(String clusterId, AclBindingFilter filter) throws ExecutionException, InterruptedException {
+    public Collection<AclBinding> describeAcls(String clusterId,
+                                               AclBindingFilter filter) throws ExecutionException, InterruptedException {
         describeAcls.computeIfAbsent(clusterId, s -> new HashMap<>());
 
         if (!this.describeAcls.get(clusterId).containsKey(filter)) {
@@ -368,5 +395,63 @@ abstract public class AbstractKafkaWrapper {
         }
 
         return describeAcls.get(clusterId).get(filter);
+    }
+
+    public void createAcl(String clusterId, String principal,
+                          AccessControl.Acl acl) throws ExecutionException, InterruptedException {
+        final AclBinding aclBinding = new AclBinding(
+            new ResourcePattern(acl.getResource().getResourceType(), acl.getResource().getName(),
+                acl.getResource().getPatternType()),
+            new AccessControlEntry(principal, acl.getHost(), acl.getOperation().getOperation(),
+                acl.getOperation().getPermissionType())
+        );
+        Logger.call(() -> {
+                try {
+                    return kafkaModule.getAdminClient(clusterId)
+                        .createAcls(Collections.singletonList(aclBinding))
+                        .all()
+                        .get();
+                } catch (ExecutionException e) {
+                    if (e.getCause() instanceof SecurityDisabledException || e.getCause() instanceof ClusterAuthorizationException || e.getCause() instanceof TopicAuthorizationException) {
+                        return ImmutableMap.of();
+                    }
+
+                    if (e.getCause() instanceof ApiException) {
+                        throw (ApiException) e.getCause();
+                    }
+
+                    throw e;
+                }
+            },
+            "Create acl",
+            null);
+    }
+
+    public void deleteAcl(String clusterId, String principal,
+                          AccessControl.Acl acl) throws ExecutionException, InterruptedException {
+        Logger.call(() -> {
+                try {
+                    return kafkaModule.getAdminClient(clusterId)
+                        .deleteAcls(Collections.singletonList(new AclBindingFilter(
+                            new ResourcePatternFilter(acl.getResource().getResourceType(), acl.getResource().getName(),
+                                acl.getResource().getPatternType()),
+                            new AccessControlEntryFilter(principal, acl.getHost(), acl.getOperation().getOperation(),
+                                acl.getOperation().getPermissionType()))))
+                        .all()
+                        .get();
+                } catch (ExecutionException e) {
+                    if (e.getCause() instanceof SecurityDisabledException || e.getCause() instanceof ClusterAuthorizationException || e.getCause() instanceof TopicAuthorizationException) {
+                        return ImmutableMap.of();
+                    }
+
+                    if (e.getCause() instanceof ApiException) {
+                        throw (ApiException) e.getCause();
+                    }
+
+                    throw e;
+                }
+            },
+            "Delete acl",
+            null);
     }
 }

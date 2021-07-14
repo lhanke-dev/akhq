@@ -259,6 +259,14 @@ export const uriAclsList = (clusterId, search) => {
   return search ? `${url}?search=${search}` : url;
 };
 
+export const uriAclsCreate = (clusterId, principal) => {
+  return `${apiUrl}/${clusterId}/acls/${btoa(principal)}`
+}
+
+export const uriAclsDelete = (clusterId, principal) => {
+  return `${apiUrl}/${clusterId}/acls/${btoa(principal)}`;
+};
+
 export const uriConsumerGroupAcls = (clusterId, groupId) => {
   return `${apiUrl}/${clusterId}/group/${groupId}/acls`;
 };

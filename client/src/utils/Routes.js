@@ -8,6 +8,7 @@ import NodeDetails from '../containers/Node/NodeDetail';
 import Base from '../components/Base/Base.jsx';
 import Tail from '../containers/Tail';
 import Acls from '../containers/Acl/AclList';
+import AclCreate from '../containers/Acl/AclCreate/AclCreate';
 import ConnectList from '../containers/Connect/ConnectList/ConnectList';
 import ConnectCreate from '../containers/Connect/ConnectCreate/ConnectCreate';
 import Connect from '../containers/Connect/ConnectDetail/Connect';
@@ -153,6 +154,7 @@ class Routes extends Root {
               {roles && roles.topic && roles.topic['topic/insert'] && (
                 <Route exact path="/ui/:clusterId/topic/create" component={TopicCreate} />
               )}
+              
               {roles && roles.topic && roles.topic['topic/data/insert'] && (
                 <Route
                   exact
@@ -202,6 +204,9 @@ class Routes extends Root {
 
               {roles && roles.acls && roles.acls['acls/read'] && (
                 <Route exact path="/ui/:clusterId/acls" component={Acls} />
+              )}
+              {roles && roles.acls && (
+                <Route exact path="/ui/:clusterId/acls/create" component={AclCreate} />
               )}
               {roles && roles.acls && roles.acls['acls/read'] && (
                 <Route exact path="/ui/:clusterId/acls/:principalEncoded/:tab?" component={AclDetails} />
