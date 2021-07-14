@@ -2,13 +2,19 @@ import React from 'react';
 import Table from '../../../../components/Table/Table';
 import { uriAclsByPrincipal } from '../../../../utils/endpoints';
 import Root from "../../../../components/Root";
+import * as constants from '../../../../utils/constants';
+import AclDeleteModal from "../../AclList/AclDeleteModal";
 
 class AclTopics extends Root {
   state = {
     selectedCluster: this.props.clusterId,
     principalEncoded: this.props.principalEncoded,
     tableData: [],
-    loading: true
+    loading: true,
+
+    // deletion
+    aclToDelete: undefined,
+    showDeleteModal: false,
   };
 
   componentDidMount() {
@@ -32,7 +38,8 @@ class AclTopics extends Root {
       return {
         topic: acl.resource.name,
         host: acl.host,
-        permission: acl.operation
+        permission: acl.operation,
+        origin: acl
       };
     });
 
@@ -50,8 +57,12 @@ class AclTopics extends Root {
 
   render() {
     const { loading } = this.state;
+    const actions = /*roles.acls && roles.acls['acls/delete']*/ true ? [constants.TABLE_DELETE] : [];
+    
     return (
+      <div>
       <Table
+        actions={actions}
         loading={loading}
         history={this.props.history}
         columns={[
@@ -85,10 +96,19 @@ class AclTopics extends Root {
         updateData={data => {
           this.setState({ tableData: data });
         }}
+        onDelete={row => this.setState({showDeleteModal: true, aclToDelete: row.origin })}
         noContent={
           'No ACLS found, or the "authorizer.class.name" parameter is not configured on the cluster.'
         }
       />
+      <AclDeleteModal
+          cluster={this.state.selectedCluster}
+          principal={atob(this.state.principalEncoded)}
+          acls={this.state.aclToDelete ? [this.state.aclToDelete] : []}
+          isShown={this.state.showDeleteModal}
+          closeModal={() => this.setState({showDeleteModal: false}, () => this.getAcls())}
+        />
+      </div>
     );
   }
 }

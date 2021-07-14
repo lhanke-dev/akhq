@@ -13,37 +13,6 @@ volumes:
     driver: local
 
 services:
-  akhq:
-    image: gradle:7-jdk11
-    command: 'gradle run -x installFrontend -x assembleFrontend -t'
-    working_dir: /app
-    volumes:
-      - ./:/app:Z
-      - ./application-dev.yml:/tmp/application.dev.yml:Z
-      - ./gradle/gradle.properties:/root/.gradle/gradle.properties:Z
-    ports:
-      - 8080:8080
-    environment:
-      MICRONAUT_CONFIG_FILES: '/tmp/application.dev.yml'
-    depends_on:
-      - kafka
-      - schema-registry
-
-  ui:
-    image: node:12
-    command: 'sh -c "npm install && npm start"'
-    working_dir: /app/client
-    tty: true
-    volumes:
-      - ./:/app:z
-      - ui-modules:/app/client/node_modules:Z
-      - ui-build:/app/client/build:Z
-    environment:
-      REACT_APP_BASE_URL: "http://localhost:8080"
-    ports:
-      - 3000:3000
-    depends_on:
-      - akhq
 
   zookeeper:
     image: confluentinc/cp-zookeeper
@@ -68,7 +37,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092'
       KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE: 'false'
       KAFKA_JMX_PORT: '9091'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
