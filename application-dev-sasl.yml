@@ -1,0 +1,17 @@
+micronaut:
+  server:
+    cors:
+      enabled: true
+      configurations:
+        all:
+          allowedOrigins:
+            - http://localhost:3000
+
+akhq:
+  connections:
+    local:
+      properties:
+        bootstrap.servers: "localhost:9093"
+        security.protocol: SASL_PLAINTEXT
+        sasl.mechanism: PLAIN
+        sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="akhq" password="testPW";
