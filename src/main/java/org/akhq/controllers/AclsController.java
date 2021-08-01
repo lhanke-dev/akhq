@@ -47,7 +47,7 @@ public class AclsController extends AbstractController {
 
     @Operation(tags = {"acls"}, summary = "Create new acl for a principal")
     @Post("{principal}")
-    //@Secured(Role.ROLE_ACLS_INSERT)
+    @Secured(Role.ROLE_ACLS_INSERT)
     public void create(
         String cluster,
         String principal,
@@ -58,7 +58,7 @@ public class AclsController extends AbstractController {
 
     @Operation(tags = {"acls"}, summary = "Delete the acl of a principal")
     @Delete("{principal}")
-    //@Secured(Role.ROLE_ACLS_DELETE)
+    @Secured(Role.ROLE_ACLS_DELETE)
     public void delete(
         String cluster,
         String principal,
