@@ -7,6 +7,7 @@ import { uriAclsCreate } from '../../../utils/endpoints';
 import { toast } from 'react-toastify';
 
 class AclCreate extends Form {
+
   state = {
     formData: {
       principal: this.props.location.state.principal,
@@ -15,7 +16,8 @@ class AclCreate extends Form {
           operationPermissionType: '',
           resourceType: '',
           resourceName: '',
-          resourcePatternType: ''
+          resourcePatternType: '',
+      ...this.props.location.state.formData
     },
     errors: {}
   };
@@ -63,9 +65,7 @@ class AclCreate extends Form {
 
     this.postApi(uriAclsCreate(clusterId, principal), acl)
       .then(() => {
-        this.props.history.push({
-          pathname: `/ui/${clusterId}/acls`,
-        });
+        this.props.history.goBack()
         toast.success(`Acl '${acl.operation.permissionType} ${acl.operation.operation} on ${acl.resource.resourceType} ${acl.resource.name} by ${principal}' was created`);
       });
   }

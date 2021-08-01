@@ -127,8 +127,7 @@ class Acls extends Root {
           <aside>
             <Link
               to={{
-                pathname: `/ui/${clusterId}/acls/create`,
-                state: { formData: this.state.createAclFormData }
+                pathname: `/ui/${clusterId}/acls/create`
               }}
               className="btn btn-primary"
             >
