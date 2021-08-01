@@ -7,15 +7,13 @@ import { remove } from '../../../utils/api';
 export default function AclDeleteModal({cluster, principal, acls = [], isShown, closeModal}) {
     
     const aclAsString = acl => `${acl.operation.permissionType} ${acl.operation.operation} on ${acl.resource.resourceType} ${acl.resource.name} by ${principal}`;
-    const aclsAsString = acls.map(acl => <code>{aclAsString(acl)}</code>);
-      
 
       const deleteAcls = () => {
         Promise.all(
           acls.map(acl => remove(uriAclsDelete(cluster, principal), acl))
         )
           .then(() => {
-            const msg = acls.length > 1 ? `${acls.length} acls deleted` : `Deleted '${aclsAsString}`
+            const msg = acls.length > 1 ? `${acls.length} acls deleted.` : `Deleted '${aclAsString(acls[0])}'.`
             toast.success(msg);
             closeModal();
           })
@@ -28,7 +26,7 @@ export default function AclDeleteModal({cluster, principal, acls = [], isShown, 
             handleCancel={closeModal}
             handleConfirm={deleteAcls}
             message={
-                <React.Fragment>Do you want to delete acl: <div>{aclsAsString}</div>?</React.Fragment>
+                <React.Fragment>Do you want to delete acl: <div>{acls.map(acl => <div><code>{aclAsString(acl)}</code></div>)}</div>?</React.Fragment>
             }
         />
     );

@@ -9,9 +9,25 @@ micronaut:
 
 akhq:
   connections:
-    local:
+    admin:
+      properties:
+        bootstrap.servers: "localhost:9093"
+        security.protocol: SASL_PLAINTEXT
+        sasl.mechanism: PLAIN
+        sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="akhqAdmin" password="adminPW";
+      schema-registry:
+        url: "http://schema-registry:8085"
+      connect:
+        - name: "connect"
+          url: "http://connect:8083"
+    dev:
       properties:
         bootstrap.servers: "localhost:9093"
         security.protocol: SASL_PLAINTEXT
         sasl.mechanism: PLAIN
         sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="akhq" password="testPW";
+      schema-registry:
+        url: "http://schema-registry:8085"
+      connect:
+        - name: "connect"
+          url: "http://connect:8083"

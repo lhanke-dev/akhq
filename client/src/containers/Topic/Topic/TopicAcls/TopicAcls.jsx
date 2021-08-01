@@ -2,12 +2,19 @@ import React from 'react';
 import Table from '../../../../components/Table';
 import { uriTopicsAcls } from '../../../../utils/endpoints';
 import Root from "../../../../components/Root";
+import * as constants from '../../../../utils/constants';
+import AclDeleteModal from '../../../Acl/AclList/AclDeleteModal';
 
 class TopicAcls extends Root {
   state = {
     data: [],
-    selectedCluster: '',
-    loading: true
+    selectedCluster: this.props.clusterId,
+    loading: true,
+
+    // deletion
+    principalToDeleteAclFor: undefined,
+    aclsToDelete: undefined,
+    showDeleteModal: false,
   };
 
   componentDidMount() {
@@ -31,7 +38,8 @@ class TopicAcls extends Root {
           principal: principal.principal,
           topic: acl.resource.name || '',
           host: acl.host || '',
-          permission: acl.operation || ''
+          permission: acl.operation || '',
+          origin: acl
         });
       })
     );
@@ -41,9 +49,14 @@ class TopicAcls extends Root {
 
   render() {
     const { data, loading } = this.state;
+    const actions = [];
+    //if(roles.acls && roles.acls['acls/delete']) {
+      actions.push(constants.TABLE_DELETE);
+    //}
     return (
       <div>
         <Table
+          actions={actions}
           loading={loading}
           history={this.props.history}
           columns={[
@@ -82,6 +95,7 @@ class TopicAcls extends Root {
           updateData={data => {
             this.setState({ data });
           }}
+          onDelete={tableEntry => this.setState({showDeleteModal: true, principalToDeleteAclFor: tableEntry.principal, aclsToDelete: [tableEntry.origin] })}
           noContent={
             <tr>
               <td colSpan={3}>
@@ -92,6 +106,13 @@ class TopicAcls extends Root {
               </td>
             </tr>
           }
+        />
+        <AclDeleteModal
+          cluster={this.state.selectedCluster}
+          principal={this.state.principalToDeleteAclFor}
+          acls={this.state.aclsToDelete}
+          isShown={this.state.showDeleteModal}
+          closeModal={() => this.setState({showDeleteModal: false}, () => this.getAcls())}
         />
       </div>
     );
