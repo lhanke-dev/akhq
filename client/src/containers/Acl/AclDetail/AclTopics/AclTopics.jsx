@@ -11,6 +11,7 @@ class AclTopics extends Root {
     principalEncoded: this.props.principalEncoded,
     tableData: [],
     loading: true,
+    roles: JSON.parse(sessionStorage.getItem('roles')),
 
     // deletion
     aclToDelete: undefined,
@@ -57,7 +58,8 @@ class AclTopics extends Root {
 
   render() {
     const { loading } = this.state;
-    const actions = /*roles.acls && roles.acls['acls/delete']*/ true ? [constants.TABLE_DELETE] : [];
+    const roles = this.state.roles || {};
+    const actions = roles.acls && roles.acls['acls/delete'] ? [constants.TABLE_DELETE] : [];
     
     return (
       <div>

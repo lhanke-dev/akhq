@@ -11,6 +11,7 @@ class TopicAcls extends Root {
     data: [],
     selectedCluster: this.props.clusterId,
     loading: true,
+    roles: JSON.parse(sessionStorage.getItem('roles')),
 
     // deletion
     principalToDeleteAclFor: undefined,
@@ -51,9 +52,10 @@ class TopicAcls extends Root {
   render() {
     const { data, loading } = this.state;
     const actions = [];
-    //if(roles.acls && roles.acls['acls/delete']) {
+    const roles = this.state.roles || {};
+    if(roles.acls && roles.acls['acls/delete']) {
       actions.push(constants.TABLE_DELETE);
-    //}
+    }
     return (
       <div>
         <Table

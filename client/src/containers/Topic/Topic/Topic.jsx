@@ -253,7 +253,7 @@ class Topic extends Root {
                   </div>
               }
 
-              {/*roles.acls && roles.acls['acls/insert'] && */(
+              {roles.acls && roles.acls['acls/insert'] && (
               <Link
                 to={{
                   pathname: `/ui/${this.state.clusterId}/acls/create`,

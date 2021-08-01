@@ -18,6 +18,7 @@ class Acls extends Root {
       search: ''
     },
     loading: true,
+    roles: JSON.parse(sessionStorage.getItem('roles')),
 
     // deletion
     principalToDeleteAclFor: undefined,
@@ -72,9 +73,9 @@ class Acls extends Root {
     const roles = this.state.roles || {};
 
     const actions = [constants.TABLE_DETAILS];
-    //if(roles.acls && roles.acls['acls/delete']) {
+    if(roles.acls && roles.acls['acls/delete']) {
       actions.push(constants.TABLE_DELETE);
-    //}
+    }
 
     return (
       <div>
@@ -123,7 +124,7 @@ class Acls extends Root {
           }
           onDetails={acl => `/ui/${clusterId}/acls/${acl.principalEncoded}`}
         />
-        {/*roles.acls && roles.acls['acls/insert'] && */(
+        {roles.acls && roles.acls['acls/insert'] && (
           <aside>
             <Link
               to={{

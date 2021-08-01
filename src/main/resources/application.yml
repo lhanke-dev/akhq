@@ -147,6 +147,8 @@ akhq:
         - registry/delete
         - registry/version/delete
         - acls/read
+        - acls/insert
+        - acls/delete
         - connect/read
         - connect/insert
         - connect/update
