@@ -95,8 +95,10 @@ class AclDetails extends Component {
             <Link
               to={{
                 pathname: `/ui/${clusterId}/acls/create`,
-                state: { principal: principal }
-              }}
+                state: { formData: {
+                  principal: principal
+                } 
+              }}}
               className="btn btn-primary"
             >
               Create ACL

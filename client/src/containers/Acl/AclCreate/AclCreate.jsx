@@ -10,14 +10,14 @@ class AclCreate extends Form {
 
   state = {
     formData: {
-      principal: this.props.location.state.principal,
+      principal: '',
         host: '',
         operation: '',
           operationPermissionType: '',
           resourceType: '',
           resourceName: '',
           resourcePatternType: '',
-      ...this.props.location.state.formData
+          ...(this.props.location.state && (this.props.location.state.formData ?? {}))
     },
     errors: {}
   };
